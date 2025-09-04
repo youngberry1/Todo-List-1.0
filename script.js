@@ -13,7 +13,7 @@ function renderTasks() {
     tasks.forEach((task, index) => {
         const li = document.createElement("li");
 
-        // task text
+        // Task text (inside span so it can be swapped later)
         const span = document.createElement("span");
         span.textContent = task.text;
         span.classList.add("task-text");
@@ -21,11 +21,11 @@ function renderTasks() {
             span.classList.add("completed");
         }
 
-        // buttons container
+        // Buttons container
         const actions = document.createElement("div");
         actions.classList.add("actions");
 
-        // delete button
+        // Delete button
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Delete";
         deleteBtn.classList.add("deleteBtn");
@@ -33,7 +33,7 @@ function renderTasks() {
             deleteTask(index);
         });
 
-        // complete button
+        // Complete button
         const completeBtn = document.createElement("button");
         completeBtn.textContent = task.completed ? "Undo" : "Complete";
         completeBtn.classList.add("completeBtn");
@@ -41,19 +41,28 @@ function renderTasks() {
             completeTask(index);
         });
 
-        // append buttons to actions container
+        // Edit button
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.classList.add("editBtn");
+        editBtn.addEventListener("click", () => {
+            editTask(index, span);
+        });
+
+        // Append buttons
         actions.appendChild(deleteBtn);
         actions.appendChild(completeBtn);
+        actions.appendChild(editBtn);
 
-        // append everything to li
+        // Append text + actions
         li.appendChild(span);
         li.appendChild(actions);
-
         taskList.appendChild(li);
     });
 
     saveTasks();
 }
+
 
 
 // Save tasks to localStorage
@@ -73,6 +82,11 @@ function loadTasks() {
 // Function to add task
 function addTask() {
     const taskText = taskInput.value.trim();
+
+    if (tasks.some(t => t.text.toLowerCase() === taskText.toLowerCase())) {
+        alert("Task already exists!");
+        return;
+    }
     if (taskText !== "") {
         tasks.push({ text: taskText, completed: false });
         taskInput.value = "";
@@ -91,6 +105,37 @@ function completeTask(index) {
     tasks[index].completed = !tasks[index].completed;
     renderTasks();
 }
+
+
+function editTask(index, spanElement) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = tasks[index].text;
+    input.classList.add("editInput");
+
+    // Replace the span with the input
+    spanElement.replaceWith(input);
+    input.focus();
+
+    // Save on Enter or blur
+    function saveEdit() {
+        const newText = input.value.trim();
+        if (newText !== "") {
+            tasks[index].text = newText;
+            renderTasks();
+        } else {
+            renderTasks();
+        }
+    }
+
+    input.addEventListener("blur", saveEdit);
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            saveEdit();
+        }
+    });
+}
+
 
 // Event listeners
 addBtn.addEventListener("click", addTask);
